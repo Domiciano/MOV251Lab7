@@ -7,8 +7,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.datastore.core.DataStore
@@ -22,6 +26,9 @@ import com.example.lab7.ui.theme.Lab7Theme
 import com.example.lab7.viewmodelrepo.AUTH_STATE
 import com.example.lab7.viewmodelrepo.AuthViewModel
 import com.example.lab7.viewmodelrepo.ChatViewModel
+import androidx.compose.material3.CardElevation
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.sp
 
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "AppVariables")
@@ -75,4 +82,56 @@ fun ChatScreen(viewModel: ChatViewModel = viewModel()) {
         viewModel.getLiveMessages()
     }
 
+    val messages by viewModel.messagesState.collectAsState()
+
+    var message by remember { mutableStateOf("") }
+
+    Scaffold { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            LazyColumn(modifier = Modifier.weight(1f)) {
+                items(messages) { messagei ->
+                    MessageCard(text = messagei.body, author = messagei.author)
+                }
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                TextField(
+                    modifier = Modifier.weight(1f),
+                    value = message,
+                    onValueChange = { message = it })
+                Box(modifier = Modifier.width(8.dp))
+                Button(onClick = {
+                    viewModel.sendMessage(message)
+                    message = ""
+                }) {
+                    Text(text = "Send")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun MessageCard(text: String, author: String) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 10.dp
+        ),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF512DA8)
+        ),
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(text = "$author dice", fontSize = 10.sp, color = Color.White)
+            Text(text = text, fontSize = 18.sp, color = Color.White)
+        }
+
+    }
 }
