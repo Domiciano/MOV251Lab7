@@ -1,14 +1,18 @@
 package com.example.lab7
 
 import android.content.Context
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -27,8 +31,12 @@ import com.example.lab7.viewmodelrepo.AUTH_STATE
 import com.example.lab7.viewmodelrepo.AuthViewModel
 import com.example.lab7.viewmodelrepo.ChatViewModel
 import androidx.compose.material3.CardElevation
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
+import com.example.lab7.util.MultipartProvider
+import com.example.lab7.viewmodelrepo.ProfileViewModel
 
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "AppVariables")
@@ -37,13 +45,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         LocalDataSourceProvider.init(applicationContext.dataStore)
+        MultipartProvider.init(applicationContext)
         enableEdgeToEdge()
         setContent {
             Lab7Theme {
                 val navController = rememberNavController()
                 NavHost(navController = navController, startDestination = "login") {
                     composable("login") { LoginScreen(navController) }
-                    composable("chat") { ChatScreen() }
+                    composable("chat") { ProfileScreen() }
                 }
             }
         }
@@ -113,6 +122,37 @@ fun ChatScreen(viewModel: ChatViewModel = viewModel()) {
         }
     }
 }
+
+
+@Composable
+fun ProfileScreen(viewModel: ProfileViewModel = viewModel()){
+
+    val urlImage by viewModel.urlImage.collectAsState()
+
+    val pickImageLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        //Se ejecuta cuando el user selcciona un foto de la galeria
+        uri?.let {  viewModel.uploadImage(it) }
+    }
+
+    Scaffold (modifier = Modifier.fillMaxSize()) { innerPadding ->
+        Column(modifier = Modifier.padding(innerPadding)) {
+            AsyncImage(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
+                    .clip(CircleShape),
+                model = urlImage, contentDescription = "")
+            Button(onClick = {
+                pickImageLauncher.launch("image/*")
+            }) {
+                Text(text = "Cambiar foto")
+            }
+        }
+    }
+}
+
 
 @Composable
 fun MessageCard(text: String, author: String) {
