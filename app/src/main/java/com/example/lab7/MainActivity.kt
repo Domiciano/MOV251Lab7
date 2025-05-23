@@ -41,6 +41,7 @@ import com.example.lab7.viewmodelrepo.ProfileViewModel
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "AppVariables")
 
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
